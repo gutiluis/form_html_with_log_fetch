@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fetch Error Handling + Loading</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+
+    #sendBtn {
+      margin-left: 10px;
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    #response {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    .loading {
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+  <h2>Enter your name</h2>
+  <input type="text" id="username" placeholder="Your name">
+  <button id="sendBtn">Send</button>
+
+  <p id="response"></p>
+
+  <script>
+    const sendBtn = document.getElementById("sendBtn");
+    const usernameInput = document.getElementById("username");
+    const responseEl = document.getElementById("response");
+
+    sendBtn.addEventListener("click", async () => {
+      const username = usernameInput.value.trim();
+
+      // Start loading state
+      responseEl.textContent = "Sending...";
+      responseEl.className = "loading";
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Sending...";
+
+      try {
+        const response = await fetch("http://127.0.0.1:5000/api/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: username })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || "Unknown backend error");
+        }
+
+        const data = await response.json();
+
+        console.log("Backend response:", data);
+        responseEl.className = "";
+        responseEl.style.color = "green";
+        responseEl.textContent = data.message;
+
+      } catch (error) {
+        console.error("Error communicating with backend:", error);
+        responseEl.className = "";
+        responseEl.style.color = "red";
+        responseEl.textContent = `Error: ${error.message}`;
+      } finally {
+        // Reset button state
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Send";
+      }
+    });
+  </script>
+</body>
+</html>
